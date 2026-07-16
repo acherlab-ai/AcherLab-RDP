@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <h1 align="center">
   <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=28&duration=3000&pause=1000&color=19D7FF&center=true&vCenter=true&width=500&lines=AcherLab+RDP;Remote+Desktop+on+GitHub+Actions" alt="header" />
 </h1>
@@ -53,3 +54,7 @@
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=19D7FF,2F8BFF,3A5BFF,5A4DFF&height=100&section=footer" />
 </p>
+=======
+# rdp
+AcherLab RDP - Remote Desktop on multiple Windows runners (windows-latest, windows-2022, windows-11-arm, windows-11-vs2026-arm)
+>>>>>>> e68223368b68710a810c62bbb3e8fc90f7a1456c
