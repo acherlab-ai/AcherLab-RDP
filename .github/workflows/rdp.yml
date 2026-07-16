@@ -1,0 +1,254 @@
+name: AcherLab RDP
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Thoi gian su dung'
+        required: false
+        default: '5h40m'
+        type: choice
+        options:
+        - '1h'
+        - '3h'
+        - '5h40m'
+
+jobs:
+  RDP-Setup:
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - windows-2022
+          - windows-11-arm
+          - windows-11-vs2026-arm
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 340
+
+    steps:
+      - name: BANNER KHOI DONG
+        run: |
+          Write-Host ""
+          Write-Host "╔══════════════════════════════════════════╗" -ForegroundColor Cyan
+          Write-Host "║        ACHERLAB RDP PREMIUM              ║" -ForegroundColor Cyan
+          Write-Host "║        ${{ matrix.os }}                    ║" -ForegroundColor Cyan
+          Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Cyan
+          Write-Host ""
+
+      - name: CAU HINH HE THONG
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "SecurityLayer" -Value 0 -Force
+          netsh advfirewall firewall add rule name="RDP-AcherLab" dir=in action=allow protocol=TCP localport=3389 profile=any
+          Set-Service -Name TermService -StartupType Automatic
+          Start-Service -Name TermService
+
+      - name: TAO TAI KHOAN
+        run: |
+          $pass = ConvertTo-SecureString "AcherLab@2026!" -AsPlainText -Force
+          New-LocalUser -Name "AcherLab" -Password $pass -AccountNeverExpires
+          Add-LocalGroupMember -Group "Administrators" -Member "AcherLab"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "AcherLab"
+          Enable-LocalUser -Name "AcherLab"
+          echo "RDP_USER=AcherLab" >> $env:GITHUB_ENV
+          echo "RDP_PASS=AcherLab@2026!" >> $env:GITHUB_ENV
+
+      - name: HIEN THI THONG TIN
+        run: |
+          Write-Host ""
+          Write-Host "╔══════════════════════════════════════════╗" -ForegroundColor Cyan
+          Write-Host "║        ACHERLAB RDP READY               ║" -ForegroundColor Cyan
+          Write-Host "╠══════════════════════════════════════════╣" -ForegroundColor Cyan
+          Write-Host "║ Runner: ${{ matrix.os }}" -ForegroundColor White
+          Write-Host "║ User:   AcherLab" -ForegroundColor White
+          Write-Host "║ Pass:   AcherLab@2026!" -ForegroundColor White
+          Write-Host "║ Port:   3389" -ForegroundColor White
+          Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Cyan
+
+      - name: DUY TRI PHIEN
+        run: |
+          $end = (Get-Date).AddMinutes(340)
+          do {
+            $remaining = $end - (Get-Date)
+            $h = [math]::Floor($remaining.TotalHours)
+            $m = [math]::Floor($remaining.TotalMinutes % 60)
+            $s = [math]::Floor($remaining.TotalSeconds % 60)
+            Write-Host "`r⏳ Con lai: $h gio $m phut $s giay" -NoNewline -ForegroundColor Cyan
+            Start-Sleep -Seconds 5
+          } while ($remaining.TotalSeconds -gt 0)
+EOF
+
+# Create the workflow file
+mkdir -p /tmp/acherlab-rdp/.github/workflows
+
+cat > /tmp/acherlab-rdp/.github/workflows/rdp.yml << 'WORKFLOW'
+name: AcherLab RDP
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Thoi gian su dung'
+        required: false
+        default: '5h40m'
+        type: choice
+        options:
+        - '1h'
+        - '3h'
+        - '5h40m'
+
+jobs:
+  RDP-Setup:
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - windows-2022
+          - windows-11-arm
+          - windows-11-vs2026-arm
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 340
+
+    steps:
+      - name: BANNER KHOI DONG
+        run: |
+          Write-Host ""
+          Write-Host "╔══════════════════════════════════════════╗" -ForegroundColor Cyan
+          Write-Host "║          ACHERLAB RDP PREMIUM            ║" -ForegroundColor Cyan
+          Write-Host "╠══════════════════════════════════════════╣" -ForegroundColor Cyan
+          Write-Host "║  Runner: ${{ matrix.os }}" -ForegroundColor White
+          Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Cyan
+          Write-Host ""
+
+      - name: CAU HINH RDP
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "SecurityLayer" -Value 0 -Force
+          netsh advfirewall firewall add rule name="AcherLab-RDP" dir=in action=allow protocol=TCP localport=3389 profile=any
+          Set-Service -Name TermService -StartupType Automatic
+          Start-Service -Name TermService
+
+      - name: TAO TAI KHOAN
+        run: |
+          $pass = ConvertTo-SecureString "AcherLab@2026!" -AsPlainText -Force
+          New-LocalUser -Name "AcherLab" -Password $pass -AccountNeverExpires
+          Add-LocalGroupMember -Group "Administrators" -Member "AcherLab"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "AcherLab"
+          Enable-LocalUser -Name "AcherLab"
+          echo "RDP_USER=AcherLab" >> $env:GITHUB_ENV
+          echo "RDP_PASS=AcherLab@2026!" >> $env:GITHUB_ENV
+
+      - name: THONG TIN KET NOI
+        run: |
+          Write-Host ""
+          Write-Host "┌───────────────────────────────────────────┐" -ForegroundColor Cyan
+          Write-Host "│        ACHERLAB RDP READY                 │" -ForegroundColor Cyan
+          Write-Host "├───────────────────────────────────────────┤" -ForegroundColor Cyan
+          Write-Host "│  Runner: ${{ matrix.os }}" -ForegroundColor White
+          Write-Host "│  User:   AcherLab" -ForegroundColor White
+          Write-Host "│  Pass:   AcherLab@2026!" -ForegroundColor White
+          Write-Host "│  Port:   3389" -ForegroundColor White
+          Write-Host "└───────────────────────────────────────────┘" -ForegroundColor Cyan
+
+      - name: DUY TRI PHIEN
+        run: |
+          $end = (Get-Date).AddMinutes(340)
+          do {
+            $r = $end - (Get-Date)
+            $h = [math]::Max(0, [math]::Floor($r.TotalHours))
+            $m = [math]::Max(0, [math]::Floor($r.TotalMinutes % 60))
+            $s = [math]::Max(0, [math]::Floor($r.TotalSeconds % 60))
+            Write-Host "`r⏳ Con lai: $h gio $m phut $s giay" -NoNewline -ForegroundColor Cyan
+            Start-Sleep -Seconds 5
+          } while ($r.TotalSeconds -gt 0)
+EOF
+
+# Create the workflow file
+mkdir -p /tmp/acherlab-rdp/.github/workflows
+
+cat > /tmp/acherlab-rdp/.github/workflows/rdp.yml << 'WORKFLOW'
+name: AcherLab RDP
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Thoi gian su dung'
+        required: false
+        default: '5h40m'
+        type: choice
+        options:
+        - '1h'
+        - '3h'
+        - '5h40m'
+
+jobs:
+  RDP-Setup:
+    strategy:
+      matrix:
+        os:
+          - windows-latest
+          - windows-2022
+          - windows-11-arm
+          - windows-11-vs2026-arm
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 340
+
+    steps:
+      - name: BANNER KHOI DONG
+        run: |
+          Write-Host ""
+          Write-Host "╔══════════════════════════════════════════╗" -ForegroundColor Cyan
+          Write-Host "║          ACHERLAB RDP PREMIUM           ║" -ForegroundColor Cyan
+          Write-Host "╠══════════════════════════════════════════╣" -ForegroundColor Cyan
+          Write-Host "║  Runner: ${{ matrix.os }}" -ForegroundColor White
+          Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Cyan
+          Write-Host ""
+
+      - name: CAU HINH RDP
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 0 -Force
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "SecurityLayer" -Value 0 -Force
+          netsh advfirewall firewall add rule name="AcherLab-RDP" dir=in action=allow protocol=TCP localport=3389 profile=any
+          Set-Service -Name TermService -StartupType Automatic
+          Start-Service -Name TermService
+
+      - name: TAO TAI KHOAN
+        run: |
+          $pass = ConvertTo-SecureString "AcherLab@2026!" -AsPlainText -Force
+          New-LocalUser -Name "AcherLab" -Password $pass -AccountNeverExpires
+          Add-LocalGroupMember -Group "Administrators" -Member "AcherLab"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "AcherLab"
+          Enable-LocalUser -Name "AcherLab"
+          echo "RDP_USER=AcherLab" >> $env:GITHUB_ENV
+          echo "RDP_PASS=AcherLab@2026!" >> $env:GITHUB_ENV
+
+      - name: THONG TIN KET NOI
+        run: |
+          Write-Host ""
+          Write-Host "┌───────────────────────────────────────────┐" -ForegroundColor Cyan
+          Write-Host "│        ACHERLAB RDP READY                 │" -ForegroundColor Cyan
+          Write-Host "├───────────────────────────────────────────┤" -ForegroundColor Cyan
+          Write-Host "│  Runner: ${{ matrix.os }}" -ForegroundColor White
+          Write-Host "│  User:   AcherLab" -ForegroundColor White
+          Write-Host "│  Pass:   AcherLab@2026!" -ForegroundColor White
+          Write-Host "│  Port:   3389" -ForegroundColor White
+          Write-Host "└───────────────────────────────────────────┘" -ForegroundColor Cyan
+
+      - name: DUY TRI PHIEN
+        run: |
+          $end = (Get-Date).AddMinutes(340)
+          do {
+            $r = $end - (Get-Date)
+            $h = [math]::Max(0, [math]::Floor($r.TotalHours))
+            $m = [math]::Max(0, [math]::Floor($r.TotalMinutes % 60))
+            $s = [math]::Max(0, [math]::Floor($r.TotalSeconds % 60))
+            Write-Host "`r⏳ Con lai: $h gio $m phut $s giay" -NoNewline -ForegroundColor Cyan
+            Start-Sleep -Seconds 5
+          } while ($r.TotalSeconds -gt 0)
