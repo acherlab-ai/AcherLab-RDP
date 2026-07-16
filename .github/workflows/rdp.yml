@@ -2,16 +2,6 @@ name: AcherLab RDP
 
 on:
   workflow_dispatch:
-    inputs:
-      duration:
-        description: 'Thoi gian su dung'
-        required: false
-        default: '5h40m'
-        type: choice
-        options:
-        - '1h'
-        - '3h'
-        - '5h40m'
 
 jobs:
   RDP-Setup:
@@ -20,14 +10,12 @@ jobs:
         os:
           - windows-latest
           - windows-2022
-          - windows-11-arm
-          - windows-11-vs2026-arm
       fail-fast: false
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 340
+    timeout-minutes: 360
 
     steps:
-      - name: BANNER KHOI DONG
+      - name: BANNER
         run: |
           Write-Host ""
           Write-Host "╔══════════════════════════════════════════╗" -ForegroundColor Cyan
@@ -35,7 +23,6 @@ jobs:
           Write-Host "╠══════════════════════════════════════════╣" -ForegroundColor Cyan
           Write-Host "║  Runner: ${{ matrix.os }}" -ForegroundColor White
           Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Cyan
-          Write-Host ""
 
       - name: CAU HINH RDP
         run: |
@@ -56,17 +43,39 @@ jobs:
           echo "RDP_USER=AcherLab" >> $env:GITHUB_ENV
           echo "RDP_PASS=AcherLab@2026!" >> $env:GITHUB_ENV
 
+      - name: CAI DAT TAILSCALE TUNNEL
+        env:
+          TS_AUTHKEY: ${{ secrets.TS_AUTHKEY }}
+        run: |
+          Write-Host "🌐 Cai dat Tailscale tunnel..." -ForegroundColor Yellow
+          $msi = "$env:TEMP\tailscale.msi"
+          Invoke-WebRequest -Uri "https://pkgs.tailscale.com/stable/tailscale-setup-latest-amd64.msi" -OutFile $msi
+          Start-Process msiexec.exe -ArgumentList "/i", "`"$msi`"", "/quiet", "/norestart" -Wait
+          Remove-Item $msi -Force
+          Start-Sleep -Seconds 10
+          & "$env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=$env:TS_AUTHKEY --hostname=acherlab-rdp --accept-routes --accept-dns --reset
+          Start-Sleep -Seconds 5
+          $ip = & "$env:ProgramFiles\Tailscale\tailscale.exe" ip -4
+          echo "TAILSCALE_IP=$ip" >> $env:GITHUB_ENV
+          Write-Host "✅ Tailscale IP: $ip" -ForegroundColor Green
+
       - name: THONG TIN KET NOI
         run: |
+          $ip = $env:TAILSCALE_IP
           Write-Host ""
-          Write-Host "┌───────────────────────────────────────────┐" -ForegroundColor Cyan
-          Write-Host "│        ACHERLAB RDP READY                 │" -ForegroundColor Cyan
-          Write-Host "├───────────────────────────────────────────┤" -ForegroundColor Cyan
-          Write-Host "│  Runner: ${{ matrix.os }}" -ForegroundColor White
-          Write-Host "│  User:   AcherLab" -ForegroundColor White
-          Write-Host "│  Pass:   AcherLab@2026!" -ForegroundColor White
-          Write-Host "│  Port:   3389" -ForegroundColor White
-          Write-Host "└───────────────────────────────────────────┘" -ForegroundColor Cyan
+          Write-Host "╔══════════════════════════════════════════════════╗" -ForegroundColor Cyan
+          Write-Host "║              ACHERLAB RDP READY                ║" -ForegroundColor Cyan
+          Write-Host "╠══════════════════════════════════════════════════╣" -ForegroundColor Cyan
+          Write-Host "║  Runner: ${{ matrix.os }}" -ForegroundColor White
+          Write-Host "║  User:   AcherLab" -ForegroundColor White
+          Write-Host "║  Pass:   AcherLab@2026!" -ForegroundColor White
+          Write-Host "║  Port:   3389" -ForegroundColor White
+          Write-Host "║  Tunnel: Tailscale" -ForegroundColor White
+          Write-Host "║  IP:     $ip" -ForegroundColor Green
+          Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "📌 Mo Remote Desktop -> Nhap IP: $ip" -ForegroundColor Yellow
+          Write-Host "📌 User: AcherLab | Pass: AcherLab@2026!" -ForegroundColor Yellow
 
       - name: DUY TRI PHIEN
         run: |
