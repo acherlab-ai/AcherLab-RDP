@@ -2,6 +2,15 @@ name: AcherLab RDP
 
 on:
   workflow_dispatch:
+    inputs:
+      password:
+        description: 'Chon mat khau'
+        required: true
+        default: 'AcherLab@2026!'
+        type: choice
+        options:
+        - 'AcherLab@2026!'
+        - 'P@ssw0rd!AcherLab2026'
 
 jobs:
   RDP-Setup:
@@ -35,13 +44,13 @@ jobs:
 
       - name: TAO TAI KHOAN
         run: |
-          $pass = ConvertTo-SecureString "AcherLab@2026!" -AsPlainText -Force
-          New-LocalUser -Name "AcherLab" -Password $pass -AccountNeverExpires
+          $pass = ConvertTo-SecureString "${{ github.event.inputs.password }}" -AsPlainText -Force
+          New-LocalUser -Name "AcherLab" -Password $pass -AccountNeverExpires -PasswordNeverExpires
           Add-LocalGroupMember -Group "Administrators" -Member "AcherLab"
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "AcherLab"
           Enable-LocalUser -Name "AcherLab"
           echo "RDP_USER=AcherLab" >> $env:GITHUB_ENV
-          echo "RDP_PASS=AcherLab@2026!" >> $env:GITHUB_ENV
+          echo "RDP_PASS=${{ github.event.inputs.password }}" >> $env:GITHUB_ENV
 
       - name: BORE TUNNEL TCP 3389
         run: |
@@ -51,8 +60,8 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile $zip
           Expand-Archive -Path $zip -DestinationPath "$env:TEMP\bore" -Force
           $bore = "$env:TEMP\bore\bore.exe"
-          Write-Host "✅ Bore tunnel dang chay! Public: bore.pub:?" -ForegroundColor Green
           Start-Process -NoNewWindow -FilePath $bore -ArgumentList "local", "3389", "--to", "bore.pub"
+          Write-Host "✅ Bore tunnel dang chay!" -ForegroundColor Green
 
       - name: THONG TIN KET NOI
         run: |
@@ -62,13 +71,12 @@ jobs:
           Write-Host "╠══════════════════════════════════════════════════╣" -ForegroundColor Cyan
           Write-Host "║  Runner: ${{ matrix.os }}" -ForegroundColor White
           Write-Host "║  User:   AcherLab" -ForegroundColor White
-          Write-Host "║  Pass:   AcherLab@2026!" -ForegroundColor White
+          Write-Host "║  Pass:   ${{ github.event.inputs.password }}" -ForegroundColor White
           Write-Host "║  Port:   3389" -ForegroundColor White
-          Write-Host "║  Tunnel: bore.pub (public, ko can dang ky)" -ForegroundColor Green
+          Write-Host "║  Tunnel: bore.pub (public)" -ForegroundColor Green
           Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Cyan
           Write-Host ""
-          Write-Host "📌 Bore dang chay ngam, kiem tra bore.pub de biet port" -ForegroundColor Yellow
-          Write-Host "📌 User: AcherLab | Pass: AcherLab@2026!" -ForegroundColor Yellow
+          Write-Host "📌 User: AcherLab | Pass: ${{ github.event.inputs.password }}" -ForegroundColor Yellow
 
       - name: DUY TRI PHIEN
         run: |
